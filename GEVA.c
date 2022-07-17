@@ -621,7 +621,7 @@ uint8_t * normalize_pos(uint8_t pos_x, uint8_t pos_y, video_buffer* buf) {
 */
 uint8_t* rotate_char(uint8_t chr, video_buffer* buf) {
     
-    uint8_t new_chr[C_HEIGHT] = {0};
+    static uint8_t new_chr[C_HEIGHT];
     uint8_t* nc_ptr = new_chr;
     uint8_t bit = 0;
     switch (buf->orient) {
