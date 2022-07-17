@@ -351,8 +351,9 @@ uint8_t clear_sector(uint8_t pos_x, uint8_t pos_y, uint8_t width, uint8_t height
 uint8_t put_char(uint8_t pos_x, uint8_t pos_y, uint8_t chr, video_buffer* buf) {
     
     uint8_t error = 0;
-    uint8_t* n_pos = NULL; 
-
+    uint8_t* n_pos; 
+    uint8_t* c;
+    
     switch (buf->orient)
     {
     case LANDSCAPE:
@@ -380,14 +381,11 @@ uint8_t put_char(uint8_t pos_x, uint8_t pos_y, uint8_t chr, video_buffer* buf) {
         error = 4;
     else if (n_pos[Y] + C_HEIGHT > buf->size_y || n_pos[X] + C_WIDTH > buf->size_x)
         error = 2;
-
     
-
     else {
-            uint8_t* c = rotate_char(chr, buf);
+            c = rotate_char(chr, buf);
             uint16_t start_byte_ptr = get_buffer_index(n_pos[X], buf->size_y - 1 - n_pos[Y], buf->byte_col_cnt);
             uint16_t buffer_byte_ptr = start_byte_ptr;
-
             uint8_t temp = 0;
             uint8_t clr = 0;
             uint8_t shifter_a = n_pos[X] % 8;
@@ -428,27 +426,24 @@ uint8_t put_string(uint8_t pos_x, uint8_t pos_y, uint8_t* chr, video_buffer* buf
     uint8_t error = 1;
     uint8_t i = 0;
     uint8_t y_offset = pos_y;
-    uint8_t x_offset = pos_x;
-   
+    uint8_t x_offset = pos_x;    
+
     if (chr != NULL) {
         
-        while (chr[i] != 0) {
+        while(i < strlen(chr)) {
 
-            if (chr[i] == '\r') {
+            if (chr[i] == '\r')
                 x_offset = pos_x;
-                i++;
-            }
-            else if (chr[i] == '\n') {
+            else if (chr[i] == '\n')
                 y_offset = y_offset - 1 - C_HEIGHT;
-                i++;
-            }
             else {
                 error = put_char(x_offset, y_offset, chr[i], buf);
                 if (error != 0)
                     break;
                 x_offset += C_WIDTH + 1;
-                i++;
+            
             }
+            i++;
         }
     }
     return error;
@@ -622,8 +617,13 @@ uint8_t * normalize_pos(uint8_t pos_x, uint8_t pos_y, video_buffer* buf) {
 uint8_t* rotate_char(uint8_t chr, video_buffer* buf) {
     
     static uint8_t new_chr[C_HEIGHT];
+    
+    for (uint8_t i = 0; i < C_HEIGHT; i++)
+            new_chr[i]=0;
+            
     uint8_t* nc_ptr = new_chr;
     uint8_t bit = 0;
+    
     switch (buf->orient) {
     
     case LANDSCAPE :
@@ -638,11 +638,12 @@ uint8_t* rotate_char(uint8_t chr, video_buffer* buf) {
         break;
 
     case PORTRAIT:
-        
+
         for (uint8_t i = 0; i < C_HEIGHT; i++) {
             for (uint8_t j = 0; j < C_HEIGHT; j++) {
-                bit = (font[chr][6 - i] & (0b10000000 >> j)) << j;
-                new_chr[6 - j] |= bit >> (7 - i);
+                bit = (font[chr][6-i] & (0b10000000 >> j)) << j;
+                new_chr[6 - j] |= bit >> (7 - i);    
+                bit = 0;
             }
         }
         break;
@@ -653,6 +654,7 @@ uint8_t* rotate_char(uint8_t chr, video_buffer* buf) {
             for (uint8_t j = 0; j < C_HEIGHT; j++) {
                 bit = (font[chr][6 - i] & (0b10000000 >> j)) << j;
                 new_chr[j] |= (bit >> i);
+                bit = 0;
             }
         }
         break;
