@@ -20,7 +20,7 @@ void draw_display_buffer(video_buffer* buf) {
                     if (buf->vid_buf[(row * buf->byte_col_cnt) + f] & (0x80 >> byte_index))
                         printf("# ");
                     else
-                        printf("- ");
+                        printf(". ");
                 }
                 
             }
@@ -56,10 +56,12 @@ int main(int argc, char** argv)
     data_container l;
 
     init_buf(&vid_buf, 128, 64);
-    set_orientation(PORTRAIT, &vid_buf);
+    set_orientation(LANDSCAPE, &vid_buf);
     set_mode(NORMAL, &vid_buf);
 
-    put_string(0,30,(uint8_t *)"Hello\n\rWorld",&vid_buf);
+    put_char(0,0,2,&vid_buf);
+    
+    //put_string(0,0,(uint16_t *)"HELLO",&vid_buf);
 
     draw_display_buffer(&vid_buf); 
    
