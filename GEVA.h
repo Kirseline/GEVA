@@ -59,6 +59,12 @@ typedef struct vbc_file {
     uint8_t* body;
 }vbc_file;
 
+enum fonts_size {
+    SMALL,
+    MEDIUM,
+    LARGE
+};
+
 /* ==========================================CHART VISUALIZATION STRUCT=========================================== */
 
 enum chart_type {
@@ -87,6 +93,7 @@ typedef struct data_container {
 }data_container;
 
 /* ================================================BASIC FUNCTION================================================= */
+
 uint8_t init_buf(video_buffer* buf, uint8_t size_x, uint8_t size_y);
 void set_mode(enum mode mode, video_buffer* buf);
 void set_orientation(enum orientation o, video_buffer* buf);
@@ -96,9 +103,9 @@ uint8_t clear_sector(uint8_t pos_x, uint8_t pos_y, uint8_t width, uint8_t height
 uint8_t put_pixel(uint8_t pos_x, uint8_t pos_y, enum color color, video_buffer* buf);
 uint8_t put_line(uint8_t pos_x1, uint8_t pos_y1, uint8_t pos_x2, uint8_t pos_y2, video_buffer* buf);
 
-
-uint8_t put_char(uint8_t pos_x, uint8_t pos_y, uint8_t chr, video_buffer* buf);
-uint8_t put_string(uint8_t pos_x, uint8_t pos_y, uint8_t* chr, video_buffer* buf);
+uint8_t set_font(enum fonts_size ff);
+uint8_t put_char(uint8_t pos_x, uint8_t pos_y, uint8_t chr, enum fonts_size ff, video_buffer* buf);
+uint8_t put_string(uint8_t pos_x, uint8_t pos_y, uint8_t* chr, enum fonts_size ff, video_buffer* buf);
 
 uint8_t put_vbc(vbc_file file, uint8_t x, uint8_t y, video_buffer* buf);
 

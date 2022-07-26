@@ -59,9 +59,10 @@ int main(int argc, char** argv)
     set_orientation(LANDSCAPE, &vid_buf);
     set_mode(NORMAL, &vid_buf);
 
-    put_char(0,0,2,&vid_buf);
-    
-    //put_string(0,0,(uint16_t *)"HELLO",&vid_buf);
+    //put_char(34,0,'1', MEDIUM, &vid_buf);  
+    //put_char(44,0,'6', MEDIUM, &vid_buf); 
+    put_string(0,20,(uint16_t *)"1234567890",SMALL,&vid_buf);
+    put_string(0,0,(uint16_t *)"1234567890",MEDIUM,&vid_buf);
 
     draw_display_buffer(&vid_buf); 
    
