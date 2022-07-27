@@ -382,7 +382,7 @@ uint8_t put_char(uint8_t pos_x, uint8_t pos_y, uint8_t chr, enum fonts_size ff, 
            break;
 
         case LANDSCAPE_INVERTED:
-            n_pos = normalize_pos(pos_x + font_width-1, pos_y + font_height - 1, buf);
+            n_pos = normalize_pos(pos_x + font_width - 1, pos_y + font_height - 1, buf);
                break;
 
         case PORTRAIT:
@@ -390,7 +390,7 @@ uint8_t put_char(uint8_t pos_x, uint8_t pos_y, uint8_t chr, enum fonts_size ff, 
             break;
 
         case PORTRAIT_INVERTED:
-            n_pos = normalize_pos(pos_x + font_height-1, pos_y, buf);
+            n_pos = normalize_pos(pos_x + font_height - 1, pos_y, buf);
             break;
 
         default:
@@ -414,20 +414,13 @@ uint8_t put_char(uint8_t pos_x, uint8_t pos_y, uint8_t chr, enum fonts_size ff, 
         for (uint8_t i = 0; i < font_height; i++) {
             buffer_byte_ptr = start_byte_ptr - (buf->byte_col_cnt * i);
             temp = c[font_height - 1 - i] >> shifter_a;
-
-            //buf->vid_buf[buffer_byte_ptr] &= (uint8_t)(clr>>8);
-            
             buf->vid_buf[buffer_byte_ptr] |= (uint8_t)(temp >> 8);
-            buf->vid_buf[buffer_byte_ptr + 1] |= (uint8_t)temp;
-            //buf->vid_buf[buffer_byte_ptr + 1] |= (uint8_t)temp;
-            /*
+            buf->vid_buf[buffer_byte_ptr + 1] |= (uint8_t)temp; 
+            
             if (shifter_a != 0){
-                    temp = c[font_height - i - 1];// << (8 - shifter_a);
-                    //clr = 0xff >> shifter_a;
-                    buf->vid_buf[buffer_byte_ptr + 2] |= (uint8_t)temp<<8-shifter_a;
-                    //buf->vid_buf[buffer_byte_ptr + 3] |= (uint8_t)temp;
-                    //buf->vid_buf[buffer_byte_ptr + 2] |= temp;
-                }*/
+                    temp = c[font_height - i - 1];
+                    buf->vid_buf[buffer_byte_ptr + 2] |= (uint8_t)temp << (8 - shifter_a);
+                }
         }
     } 
     
@@ -644,7 +637,7 @@ uint16_t* rotate_char(uint16_t *chr, video_buffer* buf) {
             new_chr[i]=0;
             
     uint16_t* nc_ptr = new_chr;
-    uint8_t bit = 0;
+    uint16_t bit = 0;
     
     switch (buf->orient) {
    
@@ -663,8 +656,8 @@ uint16_t* rotate_char(uint16_t *chr, video_buffer* buf) {
 
         for (uint8_t i = 0; i < font_height; i++) {
             for (uint8_t j = 0; j < font_height; j++) {
-                bit = (chr[6-i] & (0b10000000 >> j)) << j;
-                new_chr[6 - j] |= bit >> (7 - i);    
+                bit = (chr[font_height - 1 - i] & (0x8000 >> j)) << j;
+                new_chr[font_height - 1  - j] |= bit >> (font_height - i);    
                 bit = 0;
             }
         }
@@ -674,7 +667,7 @@ uint16_t* rotate_char(uint16_t *chr, video_buffer* buf) {
 
         for (uint8_t i = 0; i < font_height; i++) {
             for (uint8_t j = 0; j < font_height; j++) {
-                bit = (chr[6 - i] & (0b10000000 >> j)) << j;
+                bit = (chr[font_height - 1 - i] & (0x8000 >> j)) << j;
                 new_chr[j] |= (bit >> i);
                 bit = 0;
             }
