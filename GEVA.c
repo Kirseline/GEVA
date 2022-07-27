@@ -11,10 +11,10 @@ uint8_t byte_col_cnt(uint8_t size_x);
 uint16_t buffer_byte_cnt(video_buffer* buf);
 uint16_t get_buffer_index(uint8_t pos_x, uint8_t pos_y, uint8_t row_byte_cnt);
 uint8_t* normalize_pos(uint8_t pos_x, uint8_t pos_y, video_buffer* buf);
-uint8_t* rotate_char(uint8_t chr, video_buffer* buf);
+uint16_t* rotate_char(uint16_t *chr, video_buffer* buf);
 uint8_t calculate_y(uint8_t x, uint8_t x0, uint8_t x1, uint8_t y0, uint8_t y1);
 uint8_t modulo(int8_t n);
-uint8_t reverse_byte(uint8_t b);
+uint16_t reverse_byte(uint16_t b);
 
 uint8_t update_LINE(data_container* c, video_buffer* buf);
 uint8_t update_COL(data_container* c, video_buffer* buf);
@@ -348,67 +348,82 @@ uint8_t clear_sector(uint8_t pos_x, uint8_t pos_y, uint8_t width, uint8_t height
  * 4 starting point out of scope
  * note: each letter needs a square of 7x7 pixels clear on the display (because of rotation) befor drawing the letter
 */
-uint8_t put_char(uint8_t pos_x, uint8_t pos_y, uint8_t chr, video_buffer* buf) {
+uint8_t put_char(uint8_t pos_x, uint8_t pos_y, uint8_t chr, enum fonts_size ff, video_buffer* buf) {
     
     uint8_t error = 0;
     uint8_t* n_pos; 
-    uint8_t* c;
+    uint16_t* c;
     
-    switch (buf->orient)
-    {
-    case LANDSCAPE:
-        n_pos = normalize_pos(pos_x, pos_y, buf); 
-    break;
-
-    case LANDSCAPE_INVERTED:
-        n_pos = normalize_pos(pos_x + C_HEIGHT, pos_y + C_HEIGHT - 1, buf);
+    switch(ff){ //font selection
+        case SMALL:
+            font_height = C_HEIGHT_S;
+            font_width = C_WIDTH_S;
+            c = font_s[chr];
         break;
+        case MEDIUM:
+            font_height = C_HEIGHT_M;
+            font_width = C_WIDTH_M;
+            c = font_m[chr];
+        break; 
+        
+        case LARGE:
+        break; 
 
-    case PORTRAIT:
-        n_pos = normalize_pos(pos_x, pos_y + C_HEIGHT, buf);
-        break;
-
-    case PORTRAIT_INVERTED:
-        n_pos = normalize_pos(pos_x + C_HEIGHT-1, pos_y, buf);
-        break;
-
-    default:
-        n_pos = normalize_pos(pos_x, pos_y, buf);
+        default:
+            font_height = C_HEIGHT_S;
+            font_width = C_WIDTH_S;
+            c = font_s[chr];
         break;
     }
-              
+
+    switch (buf->orient) {
+        case LANDSCAPE:
+            n_pos = normalize_pos(pos_x, pos_y, buf); 
+           break;
+
+        case LANDSCAPE_INVERTED:
+            n_pos = normalize_pos(pos_x + font_width - 1, pos_y + font_height - 1, buf);
+               break;
+
+        case PORTRAIT:
+            n_pos = normalize_pos(pos_x, pos_y + font_height, buf);
+            break;
+
+        case PORTRAIT_INVERTED:
+            n_pos = normalize_pos(pos_x + font_height - 1, pos_y, buf);
+            break;
+
+        default:
+            n_pos = normalize_pos(pos_x, pos_y, buf);
+            break;
+        }
+
     if (n_pos[X] >= buf->size_x || n_pos[X] < 0 || n_pos[Y] >= buf->size_y || n_pos[Y] < 0)
         error = 4;
-    else if (n_pos[Y] + C_HEIGHT > buf->size_y || n_pos[X] + C_WIDTH > buf->size_x)
+    else if (n_pos[Y] + font_height > buf->size_y || n_pos[X] + font_width > buf->size_x)
         error = 2;
-    
     else {
-            c = rotate_char(chr, buf);
-            uint16_t start_byte_ptr = get_buffer_index(n_pos[X], buf->size_y - 1 - n_pos[Y], buf->byte_col_cnt);
-            uint16_t buffer_byte_ptr = start_byte_ptr;
-            uint8_t temp = 0;
-            uint8_t clr = 0;
-            uint8_t shifter_a = n_pos[X] % 8;
-
-            for (uint8_t i = 0; i < 7; i++) {
-
-                buffer_byte_ptr = start_byte_ptr - (buf->byte_col_cnt * i);
-
-                temp = c[C_HEIGHT - 1 - i] >> shifter_a;
-                clr = 0xff << (8 - shifter_a);
-                buf->vid_buf[buffer_byte_ptr] &= clr;
-                buf->vid_buf[buffer_byte_ptr] |= temp;
-
-                if (shifter_a != 0){
-
-                    temp = c[C_HEIGHT - i - 1] << (8 - shifter_a);
-                    clr = 0xff >> shifter_a;
-
-                    buf->vid_buf[buffer_byte_ptr + 1] &= clr;
-                    buf->vid_buf[buffer_byte_ptr + 1] |= temp;
+        c = rotate_char(c, buf);
+            
+        uint16_t start_byte_ptr = get_buffer_index(n_pos[X], buf->size_y - 1 - n_pos[Y], buf->byte_col_cnt);
+        uint16_t buffer_byte_ptr = start_byte_ptr;
+        uint16_t temp = 0;
+        uint16_t clr = 0;
+        uint8_t shifter_a = n_pos[X] % 8;
+    
+        for (uint8_t i = 0; i < font_height; i++) {
+            buffer_byte_ptr = start_byte_ptr - (buf->byte_col_cnt * i);
+            temp = c[font_height - 1 - i] >> shifter_a;
+            buf->vid_buf[buffer_byte_ptr] |= (uint8_t)(temp >> 8);
+            buf->vid_buf[buffer_byte_ptr + 1] |= (uint8_t)temp; 
+            
+            if (shifter_a != 0){
+                    temp = c[font_height - i - 1];
+                    buf->vid_buf[buffer_byte_ptr + 2] |= (uint8_t)temp << (8 - shifter_a);
                 }
-            }
         }
+    } 
+    
     free(n_pos);
     return error;
 }
@@ -421,7 +436,7 @@ uint8_t put_char(uint8_t pos_x, uint8_t pos_y, uint8_t chr, video_buffer* buf) {
  *
  * 4 starting point out of scope
 */
-uint8_t put_string(uint8_t pos_x, uint8_t pos_y, uint8_t* chr, video_buffer* buf) {
+uint8_t put_string(uint8_t pos_x, uint8_t pos_y, uint8_t* chr, enum fonts_size ff, video_buffer* buf) {
     
     uint8_t error = 1;
     uint8_t i = 0;
@@ -435,12 +450,12 @@ uint8_t put_string(uint8_t pos_x, uint8_t pos_y, uint8_t* chr, video_buffer* buf
             if (chr[i] == '\r')
                 x_offset = pos_x;
             else if (chr[i] == '\n')
-                y_offset = y_offset - 1 - C_HEIGHT;
+                y_offset = y_offset - 1 - font_height;
             else {
-                error = put_char(x_offset, y_offset, chr[i], buf);
+                error = put_char(x_offset, y_offset, chr[i], ff, buf);
                 if (error != 0)
                     break;
-                x_offset += C_WIDTH + 1;
+                x_offset += font_width + 1;
             
             }
             i++;
@@ -614,35 +629,35 @@ uint8_t * normalize_pos(uint8_t pos_x, uint8_t pos_y, video_buffer* buf) {
 /* 
  * Generates new normalized character from font.h character 
 */
-uint8_t* rotate_char(uint8_t chr, video_buffer* buf) {
+uint16_t* rotate_char(uint16_t *chr, video_buffer* buf) {
     
-    static uint8_t new_chr[C_HEIGHT];
+    uint16_t *new_chr = (uint16_t *)malloc(font_height);
     
-    for (uint8_t i = 0; i < C_HEIGHT; i++)
+    for (uint8_t i = 0; i < font_height; i++)
             new_chr[i]=0;
             
-    uint8_t* nc_ptr = new_chr;
-    uint8_t bit = 0;
+    uint16_t* nc_ptr = new_chr;
+    uint16_t bit = 0;
     
     switch (buf->orient) {
-    
+   
     case LANDSCAPE :
-        nc_ptr = font[chr];
+        nc_ptr = chr;
         break;
-
+    
     case LANDSCAPE_INVERTED:
 
-        for (uint8_t i = 0; i < C_HEIGHT; i++) {
-            new_chr[i] = reverse_byte(font[chr][6 - i]);
+        for (uint8_t i = 0; i < font_height; i++) {
+            new_chr[i] = reverse_byte(chr[font_height - 1 - i] >> 16 - font_width) ;
         }
         break;
 
     case PORTRAIT:
 
-        for (uint8_t i = 0; i < C_HEIGHT; i++) {
-            for (uint8_t j = 0; j < C_HEIGHT; j++) {
-                bit = (font[chr][6-i] & (0b10000000 >> j)) << j;
-                new_chr[6 - j] |= bit >> (7 - i);    
+        for (uint8_t i = 0; i < font_height; i++) {
+            for (uint8_t j = 0; j < font_height; j++) {
+                bit = (chr[font_height - 1 - i] & (0x8000 >> j)) << j;
+                new_chr[font_height - 1  - j] |= bit >> (font_height - i);    
                 bit = 0;
             }
         }
@@ -650,9 +665,9 @@ uint8_t* rotate_char(uint8_t chr, video_buffer* buf) {
    
     case PORTRAIT_INVERTED:
 
-        for (uint8_t i = 0; i < C_HEIGHT; i++) {
-            for (uint8_t j = 0; j < C_HEIGHT; j++) {
-                bit = (font[chr][6 - i] & (0b10000000 >> j)) << j;
+        for (uint8_t i = 0; i < font_height; i++) {
+            for (uint8_t j = 0; j < font_height; j++) {
+                bit = (chr[font_height - 1 - i] & (0x8000 >> j)) << j;
                 new_chr[j] |= (bit >> i);
                 bit = 0;
             }
@@ -660,19 +675,22 @@ uint8_t* rotate_char(uint8_t chr, video_buffer* buf) {
         break;
     
     default:
-        nc_ptr = font[chr];
+        nc_ptr = chr;
         break;
     }
     return nc_ptr;
 }
 
-uint8_t reverse_byte(uint8_t b) {
+uint16_t reverse_byte(uint16_t b) {
 
-    b = (b & 0xF0) >> 4 | (b & 0x0F) << 4;
-    b = (b & 0xCC) >> 2 | (b & 0x33) << 2;
-    b = (b & 0xAA) >> 1 | (b & 0x55) << 1;
+    b = ((b >> 1) & 0x5555) | ((b & 0x5555) << 1);
+    b = ((b >> 2) & 0x3333) | ((b & 0x3333) << 2);
+    b = ((b >> 4) & 0x0f0f) | ((b & 0x0f0f) << 4);
+    b = ((b >> 8) & 0x00ff) | ((b & 0x00ff) << 8);
+
     return b;
 }
+
 
 uint8_t modulo(int8_t n) {
     return (n > 0) ? n : -n;
