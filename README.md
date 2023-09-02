@@ -15,4 +15,7 @@
 
 
 
-NOTE: not really test with smaller lcd than 128x64
+NOTE:
+- not really test with smaller i2c oled than 128x64
+- stm32 i2c frequency: 400Khz -> full update in ~40ms
+- currently in development: graphical driver for spi graphical 12864 lcd
