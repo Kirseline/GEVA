@@ -60,10 +60,10 @@ int main(int argc, char** argv)
     set_mode(NORMAL, &vid_buf);
 
 
-    //put_char(0,0,'N', SMALL, &vid_buf);
-    //put_char(0,10,'N', MEDIUM, &vid_buf); 
-    //put_string(0,20,(uint16_t *)"1234567890",SMALL,&vid_buf);
-    put_string(0,50,(uint16_t *)"ABCDEFGHILM\n\rNOPQRSTUVZ\n\rJKXWY",MEDIUM,&vid_buf);
+    //put_char(0,0,'h', SMALL, &vid_buf);
+    //put_char(0,10,'h', MEDIUM, &vid_buf); 
+    put_string(0,8,(uint16_t *)"abcdefghilmnopqrstuvz\n\rjkxyw",SMALL,&vid_buf);
+    put_string(0,50,(uint16_t *)"abcdefghilm\n\rnopqrstuvz\n\rjkxwy",MEDIUM,&vid_buf);
 
     draw_display_buffer(&vid_buf); 
    

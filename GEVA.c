@@ -1,6 +1,6 @@
+#include <string.h>
 #include "GEVA.h"
 #include "GEVA_font.h"
-#include <string.h>
 
 /*
 * TO-DO : better error handling
@@ -140,11 +140,11 @@ uint8_t put_pixel(uint8_t pos_x, uint8_t pos_y, enum color color, video_buffer* 
         error = 4;
     else {
         if (buf->mode & color)
-            color = CLEAR;
+            color = CLEAR_C;
         else if (buf->mode & ~color)
-            color = SET;
+            color = SET_C;
 
-        if (color)
+        if (!color)
             buf->vid_buf[get_buffer_index(n_pos[X], (buf->size_y - n_pos[Y] - 1), buf->byte_col_cnt)] |= 0x80 >> (n_pos[X] % 8);
         else
             buf->vid_buf[get_buffer_index(n_pos[X], (buf->size_y - n_pos[Y] - 1), buf->byte_col_cnt)] &= ~(0x80 >> (n_pos[X] % 8));
@@ -180,7 +180,7 @@ uint8_t put_line(uint8_t pos_x1, uint8_t pos_y1, uint8_t pos_x2, uint8_t pos_y2,
             firsty = pos_y1;
         }
         for (uint8_t i = 0; i < line_lenght; i++) {
-            error = put_pixel(pos_x1, firsty + i, SET, buf);
+            error = put_pixel(pos_x1, firsty + i, SET_C, buf);
         }
     }
     else {
@@ -216,7 +216,7 @@ uint8_t put_line(uint8_t pos_x1, uint8_t pos_y1, uint8_t pos_x2, uint8_t pos_y2,
                if (y_todrw < 0)
                    y_todrw = 0;
 
-               error = put_pixel(x, y_todrw, SET, buf);
+               error = put_pixel(x, y_todrw, SET_C, buf);
                fill_y++;
 
                if (y_todrw == pos_y2 && pos_y1 != pos_y2)
@@ -353,7 +353,7 @@ uint8_t put_char(uint8_t pos_x, uint8_t pos_y, uint8_t chr, enum fonts_size ff, 
     uint8_t error = 0;
     uint8_t* n_pos; 
     uint16_t* c;
-    
+
     switch(ff){ //font selection
         case SMALL:
             font_height = C_HEIGHT_S;
@@ -408,7 +408,6 @@ uint8_t put_char(uint8_t pos_x, uint8_t pos_y, uint8_t chr, enum fonts_size ff, 
         uint16_t start_byte_ptr = get_buffer_index(n_pos[X], buf->size_y - 1 - n_pos[Y], buf->byte_col_cnt);
         uint16_t buffer_byte_ptr = start_byte_ptr;
         uint16_t temp = 0;
-        uint16_t clr = 0;
         uint8_t shifter_a = n_pos[X] % 8;
     
         for (uint8_t i = 0; i < font_height; i++) {
@@ -520,7 +519,7 @@ uint8_t put_circle(uint8_t o_x, uint8_t o_y, uint8_t r, video_buffer* buf) {
         for (int16_t x = -r; x <= r; x++) {
             s = x * x + y * y;
             if (s >= rsqr - r && s <= rsqr + r) {
-                error = put_pixel(o_x + x, o_y + y, SET, buf);
+                error = put_pixel(o_x + x, o_y + y, SET_C, buf);
                // if (error)
                 //    return error;
             }
@@ -648,7 +647,7 @@ uint16_t* rotate_char(uint16_t *chr, video_buffer* buf) {
     case LANDSCAPE_INVERTED:
 
         for (uint8_t i = 0; i < font_height; i++) {
-            new_chr[i] = reverse_byte(chr[font_height - 1 - i] >> 16 - font_width) ;
+            new_chr[i] = reverse_byte(chr[font_height - 1 - i] >> (16 - font_width)) ;
         }
         break;
 
@@ -842,7 +841,7 @@ uint8_t update_LINE(data_container* c, video_buffer* buf) {
             put_line(c->o_x, c->o_y, c->o_x, c->o_y - c->dim_y_neg, buf); //
             
             for (uint8_t i = 0; i <= c->x_division; i++) //draw x data markers
-                put_pixel(c->o_x + dx * i, c->o_y - 1,SET, buf);
+                put_pixel(c->o_x + dx * i, c->o_y - 1,SET_C, buf);
             
             old_data = c->o_y;
             error = clear_sector(c->o_x + 1, c->o_y - c->dim_y_neg, c->dim_x, c->dim_y_neg, buf); //limits check within clear_sector
@@ -899,7 +898,7 @@ uint8_t update_SCATTER(data_container* c, video_buffer* buf) {
             
                 
             for (uint8_t i = 0; i <= c->x_division; i++) //draw x data markers
-                put_pixel(c->o_x + dx * i, c->o_y - 1, SET, buf);
+                put_pixel(c->o_x + dx * i, c->o_y - 1, SET_C, buf);
 
             old_data = c->o_y;
                 
@@ -911,7 +910,7 @@ uint8_t update_SCATTER(data_container* c, video_buffer* buf) {
             x = c->o_x;
         }
         else {
-            error = put_pixel(x, (uint8_t)(c->o_y + value), SET, buf);
+            error = put_pixel(x, (uint8_t)(c->o_y + value), SET_C, buf);
             //old_data = (uint8_t)(c->o_y + value);
             x += dx;
         }
@@ -952,7 +951,7 @@ uint8_t update_XY(data_container* c, video_buffer* buf) {
             for (uint8_t i = 0; i < c->xy_entries.n_ent; i++){
                 dx = c->xy_entries.x[i] * c->dim_x / c->max_x;
                 dy = c->xy_entries.y[i] * c->dim_y_pos / c->max;
-                put_pixel(c->o_x + dx, c->o_y + dy, SET, buf);
+                put_pixel(c->o_x + dx, c->o_y + dy, SET_C, buf);
             } 
     }
     return error;

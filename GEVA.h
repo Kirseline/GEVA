@@ -12,8 +12,8 @@
 #define _D 3
 
 enum color {
-    CLEAR = 0,
-    SET = 1
+    CLEAR_C = 0,
+    SET_C = 1
 };
 
 enum mode {

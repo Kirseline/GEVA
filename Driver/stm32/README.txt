@@ -1,0 +1,1 @@
+note: change the include file to match the specific mcu (#include "stm32f7xx_hal.h")
