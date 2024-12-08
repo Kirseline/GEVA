@@ -34,7 +34,7 @@ uint8_t init_buf(video_buffer *buf, uint8_t size_x, uint8_t size_y) {
     buf->byte_col_cnt = byte_col_cnt(size_x);
     buf->byte_buffer_cnt = buffer_byte_cnt(buf);
     buf->vid_buf = (uint8_t *)malloc(buf->byte_buffer_cnt);
-    
+
     /*initialize default pointer values*/
     buf->origin[0] = 0;
     buf->origin[1] = 0;
@@ -135,16 +135,18 @@ uint8_t put_pixel(uint8_t pos_x, uint8_t pos_y, enum color color, video_buffer* 
 
     uint8_t error = 0;
     uint8_t *n_pos = normalize_pos(pos_x, pos_y, buf);
+    enum color color_to_set;
 
     if ((n_pos[Y] < 0) || (n_pos[Y] > buf->size_y - 1) || (n_pos[X] < 0) || (n_pos[X] > buf->size_x - 1))
         error = 4;
     else {
-        if (buf->mode & color)
-            color = CLEAR_C;
-        else if (buf->mode & ~color)
-            color = SET_C;
 
-        if (!color)
+        if(buf->mode)
+            color_to_set = (color == SET_C) ? CLEAR_C : SET_C;
+        else
+            color_to_set = (color == SET_C) ? SET_C : CLEAR_C;
+
+        if (color_to_set)
             buf->vid_buf[get_buffer_index(n_pos[X], (buf->size_y - n_pos[Y] - 1), buf->byte_col_cnt)] |= 0x80 >> (n_pos[X] % 8);
         else
             buf->vid_buf[get_buffer_index(n_pos[X], (buf->size_y - n_pos[Y] - 1), buf->byte_col_cnt)] &= ~(0x80 >> (n_pos[X] % 8));
@@ -423,7 +425,7 @@ uint8_t put_char(uint8_t pos_x, uint8_t pos_y, uint8_t chr, enum fonts_size ff, 
         }
     } 
     
-    free(n_pos);
+   // free(n_pos);
     return error;
 }
 
