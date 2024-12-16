@@ -36,6 +36,7 @@ void get_vbc_file(vbc_file* file, const char* s) {
     fread(&file->header, sizeof(uint8_t), sizeof(file->header), vbc);
     uint16_t vbc_body_byte = (((uint16_t)file->header.byte_cnt_h) << 8 | file->header.byte_cnt_l);
     //printf("%d\n", vbc_body_byte);
+#error Ehh volevi, volevi che compilasse...... leva via sto malloc per cortesia (by Mazzu), e no, commentare la riga non funziona.....
     uint8_t* body = (uint8_t*)malloc(vbc_body_byte);
     fseek(vbc, 5, SEEK_SET);
     fread(body, sizeof(uint8_t), vbc_body_byte, vbc);
@@ -55,19 +56,19 @@ int main(int argc, char** argv)
     data_container f;
     data_container l;
 
-    init_buf(&vid_buf, 128, 64);
+    init_buf(&vid_buf, GEVA_SCREEN_WIDTH, GEVA_SCREEN_HEIGHT);
     set_orientation(LANDSCAPE, &vid_buf);
     set_mode(NORMAL, &vid_buf);
 
 
     //put_char(0,0,'h', SMALL, &vid_buf);
     //put_char(0,10,'h', MEDIUM, &vid_buf); 
-    put_string(0,8,(uint16_t *)"abcdefghilmnopqrstuvz\n\rjkxyw",SMALL,&vid_buf);
-    put_string(0,50,(uint16_t *)"abcdefghilm\n\rnopqrstuvz\n\rjkxwy",MEDIUM,&vid_buf);
+    put_string(0,8,(uint8_t *)"abcdefghilmnopqrstuvz\n\rjkxyw",SMALL,&vid_buf);
+    // put_string(0,50,(uint8_t *)"abcdefghilm\n\rnopqrstuvz\n\rjkxwy",MEDIUM,&vid_buf);
 
     draw_display_buffer(&vid_buf); 
    
-    free(vid_buf.vid_buf);
+    /// free(vid_buf.vid_buf);
    
     return 0;
 }

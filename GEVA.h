@@ -2,7 +2,7 @@
 #define __VIDEO_BUFFER__
 
 #include <stdint.h>
-#include <malloc.h>
+#include "GEVA_config.h"
     
 #define X 0
 #define Y 1
@@ -33,7 +33,7 @@ typedef struct video_buffer {
     uint8_t size_x;
     uint8_t size_y;
 
-    uint8_t* vid_buf;
+    uint8_t vid_buf[GEVA_SCREEN_WIDTH * GEVA_SCREEN_HEIGHT];
 
     uint8_t byte_col_cnt;
     uint16_t byte_buffer_cnt;
@@ -107,7 +107,9 @@ uint8_t set_font(enum fonts_size ff);
 uint8_t put_char(uint8_t pos_x, uint8_t pos_y, uint8_t chr, enum fonts_size ff, video_buffer* buf);
 uint8_t put_string(uint8_t pos_x, uint8_t pos_y, uint8_t* chr, enum fonts_size ff, video_buffer* buf);
 
+#if 0
 uint8_t put_vbc(vbc_file file, uint8_t x, uint8_t y, video_buffer* buf);
+#endif
 
 /* ================================================SHAPES========================================================= */
 uint8_t put_circle(uint8_t o_x, uint8_t o_y, uint8_t r, video_buffer* buf);
